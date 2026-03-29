@@ -4,7 +4,7 @@
 Key findings:
 - Identified $4.59M (95%) of active pipeline at risk of being lost
 - Discovered sales team spends 30+ days on 45% of deals that never close
-- Found lean companies generate disproportionately high revenue challenging the big company = big deal assumption
+- Found lean companies generate disproportionately high revenue challenging — the big company = big deal assumption
 
 ---
 
@@ -126,6 +126,7 @@ order by sum(sp.close_value) desc;
 Compared won deals, lost deals, total revenue and win rate per account to identify which accounts consume the most sales effort relative to their actual revenue contribution.
 
 **Finding:** Total revenue does not equal sales efficiency. While Kan-code drives the most total volume, their win rate is only 61.5%. Conversely, accounts like Rangreen and Goodsilron boast incredible win rates of 75% and 73.8% respectively.
+
 ---
 
 ### Q6 — Regional Revenue Efficiency
@@ -326,7 +327,7 @@ CRM-Sales-Analytics/
 ## What I Learned
 
 - Always create staging tables before cleaning — it saved me multiple times during this project
-- 16.2% of pipeline records had no linked account. Deleting them would have been wrong investigating why revealed a real CRM behavior pattern worth preserving
+- 16.2% of pipeline records had no linked account. Deleting them would have been wrong — investigating why revealed a real CRM behavior pattern worth preserving
 - 95% pipeline at risk sounds alarming but becomes fully defensible once the methodology is documented clearly
 - High deal size does not always mean high efficiency, GTK 500 proves that
 
