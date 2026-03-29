@@ -314,12 +314,10 @@ CRM-Sales-Analytics/
 ├── SQL/
 │   └── crm_cleaning_analysis.sql
 ├── Screenshots/
-│   ├── page1_executive_sales.png
-│   ├── page2_pipeline_risk.png
-│   ├── page3_product_performance.png
-│   └── page4_account_market.png
-└── Dashboard/
-    └── CRM_Analytics.pbix
+    ├── page1_executive_sales.png
+    ├── page2_pipeline_risk.png
+    ├── page3_product_performance.png
+    └── page4_account_market.png
 ```
 
 ---
