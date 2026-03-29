@@ -4,7 +4,7 @@
 Key findings:
 - Identified $4.59M (95%) of active pipeline at risk of being lost
 - Discovered sales team spends 30+ days on 45% of deals that never close
-- Found lean companies generate disproportionately high revenue challenging — the big company = big deal assumption
+- Found lean companies generate disproportionately high revenue challenging - the big company = big deal assumption
 
 ---
 
@@ -25,7 +25,7 @@ The project covers the complete pipeline:
 
 ## The Business Problem
 
-The sales organization had no clear visibility into pipeline health. Deals were stalling, revenue was at risk, and nobody could pinpoint exactly where the sales process was breaking down. This project was built to diagnose those problems with data — not gut feeling.
+The sales organization had no clear visibility into pipeline health. Deals were stalling, revenue was at risk, and nobody could pinpoint exactly where the sales process was breaking down. This project was built to diagnose those problems with data not gut feeling.
 
 ---
 
@@ -42,15 +42,15 @@ Before touching the raw data I created a copy of every table as a staging table.
 - **Close value standardization:** Applied a defensive UPDATE using a LEFT JOIN to the Products table to enforce consistent close_value logic across all deal stages:
   - Won deals: fallback to standard product sales_price if close_value was missing or zero (validation confirmed no such cases existed acts as safety net for future loads)
   - Lost deals: explicitly set to 0 to ensure clean revenue aggregations
-  - Open deals: left as NULL — no revenue assumed for unclosed deals
+  - Open deals: left as NULL, no revenue assumed for unclosed deals
 
-- **NULL account investigation:** 1,425 opportunities (16.2% of the dataset) had no linked account. Instead of deleting them I investigated why. The finding: every single NULL account record was in either Prospecting or Engaging stage, never in Won or Lost. This is normal CRM behavior — early stage leads that haven't been formally linked to an account yet. I flagged these with a has_account column (0/1) and kept them in the dataset.
+- **NULL account investigation:** 1,425 opportunities (16.2% of the dataset) had no linked account. Instead of deleting them I investigated why. The finding: every single NULL account record was in either Prospecting or Engaging stage, never in Won or Lost. This is normal CRM behavior, early stage leads that haven't been formally linked to an account yet. I flagged these with a has_account column (0/1) and kept them in the dataset.
 
-- **Sector name fix:** Found a typo — "technolgy" — standardized to "technology" across all affected rows.
+- **Sector name fix:** Found a typo "technolgy" standardized to "technology" across all affected rows.
 
 ### A Key CRM Discovery
 
-Every lost deal in the dataset had both an engage_date and a close_date — meaning our sales team made contact before the deal was marked lost. This revealed something important: leads that were contacted but never responded were NOT being marked as lost. They were sitting in Prospecting indefinitely, clogging the pipeline with dead weight that looks like active opportunity but isn't.
+Every lost deal in the dataset had both an engage_date and a close_date meaning our sales team made contact before the deal was marked lost. This revealed something important: leads that were contacted but never responded were NOT being marked as lost. They were sitting in Prospecting indefinitely, clogging the pipeline with dead weight that looks like active opportunity but isn't.
 
 ---
 
@@ -84,7 +84,7 @@ group by drop_off_category;
 
 ### Q1 — Quarter over Quarter Revenue by Product
 
-Used LAG() window function to compare each product's revenue against the previous quarter — identifying which products are growing and which are declining.
+Used LAG() window function to compare each product's revenue against the previous quarter - identifying which products are growing and which are declining.
 
 **Finding:** Nearly every product saw a violent revenue spike in Q2 (e.g., GTK 500 surged 621%, GTX Pro up 186%), followed by sharp contractions or stagnation in Q3 and Q4.
 
@@ -117,7 +117,7 @@ group by sp.account,a.employees, a.revenue
 order by sum(sp.close_value) desc;
 ```
 
-**Finding:** Companies with fewer employees than average but higher company revenue than average generated some of the highest sales figures. Lean organizations have faster decision-making and stronger purchasing power — these accounts should be prioritized for upselling and retention.
+**Finding:** Companies with fewer employees than average but higher company revenue than average generated some of the highest sales figures. Lean organizations have faster decision-making and stronger purchasing power, these accounts should be prioritized for upselling and retention.
 
 ---
 
@@ -151,7 +151,7 @@ order by won_revenue_per_opportunity desc;
 
 ### Q8 — Manager-Level Analysis
 
-**Finding:** Win rates are remarkably consistent across all managers and regions — ranging only from 62.08% to 64.43%. No single manager has a meaningful edge in closing ability. However total revenue varies by 2x between the highest (Melvin Marxen $2.25M) and lowest (Dustin Brinkmann $1.09M) performers. When everyone wins at the same rate but revenues differ this much, the gap comes from deal size and account quality, not individual skill
+**Finding:** Win rates are remarkably consistent across all managers and regions ranging only from 62.08% to 64.43%. No single manager has a meaningful edge in closing ability. However total revenue varies by 2x between the highest (Melvin Marxen $2.25M) and lowest (Dustin Brinkmann $1.09M) performers. When everyone wins at the same rate but revenues differ this much, the gap comes from deal size and account quality, not individual skill
 
 ---
 
@@ -271,7 +271,7 @@ Avg revenue per account =
 #### Page 1 — Executive Sales Performance
 **Question:** Are we hitting targets and who is driving results?
 
-Revenue target is calculated dynamically as average monthly revenue × 1.15. June was the strongest month at $1.34M i.e. 41% above the monthly average. The manager leaderboard reveals that Rocco Neubert generates the 2nd highest revenue but carries the lowest win rate — high volume, low efficiency.
+Revenue target is calculated dynamically as average monthly revenue × 1.15. June was the strongest month at $1.34M i.e. 41% above the monthly average. The manager leaderboard reveals that Rocco Neubert generates the 2nd highest revenue but carries the lowest win rate - high volume, low efficiency.
 
 <img width="4150" height="2400" alt="crm_dashboard-1" src="https://github.com/user-attachments/assets/1d9bde27-7911-4290-9f21-4a7dee6dab93" />
 
@@ -289,8 +289,8 @@ Revenue target is calculated dynamically as average monthly revenue × 1.15. Jun
 #### Page 3 — Product Performance
 **Question:** What are we selling and what's making money?
 
-GTX Pro leads total revenue across 9 of 10 sectors. GTK 500 has the highest average deal size at $26,765 but takes 64 days to close — the longest in the 
-portfolio and a significant efficiency bottleneck. MG Special has the highest deal volume relative to revenue generated — a product worth reviewing for continued investment.
+GTX Pro leads total revenue across 9 of 10 sectors. GTK 500 has the highest average deal size at $26,765 but takes 64 days to close, the longest in the 
+portfolio and a significant efficiency bottleneck. MG Special has the highest deal volume relative to revenue generated, a product worth reviewing for continued investment.
 
 <img width="4150" height="2400" alt="crm_dashboard-3" src="https://github.com/user-attachments/assets/2a6c50cf-053f-4e8a-8374-caa3eddea92f" />
 
@@ -326,7 +326,7 @@ CRM-Sales-Analytics/
 
 ## What I Learned
 
-- Always create staging tables before cleaning — it saved me multiple times during this project
+- Always create staging tables before cleaning.
 - 16.2% of pipeline records had no linked account. Deleting them would have been wrong — investigating why revealed a real CRM behavior pattern worth preserving
 - 95% pipeline at risk sounds alarming but becomes fully defensible once the methodology is documented clearly
 - High deal size does not always mean high efficiency, GTK 500 proves that
