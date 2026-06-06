@@ -1,25 +1,43 @@
 # CRM Sales & Pipeline Diagnostic
+> **95% of the active pipeline — $4.59M out of $4.82M — is stale or at risk of being lost. The sales team is spending 30+ days on 45% of deals that will never close. This project diagnoses exactly where the revenue is leaking and why.**
+
 **Tech Stack:** MySQL · Power BI · Power Query · DAX
 
-Key findings:
-- Identified $4.59M (95%) of active pipeline at risk of being lost
-- Discovered sales team spends 30+ days on 45% of deals that never close
-- Found lean companies generate disproportionately high revenue challenging - the big company = big deal assumption
-
+## The Problem
+ 
+A B2B technology company's sales organization had no real visibility into pipeline health. Deals were silently dying, revenue was at risk, and gut feeling was filling the gap where data should have been.
+ 
+This project was built to answer the questions a sales director actually loses sleep over:
+ 
+- Where is active pipeline dying — and how much is it worth?
+- Are we losing deals because of bad leads, or because we can't close?
+- Which accounts and products are worth our sales effort?
+**Dataset:** 8,800 sales opportunities across 4 tables, covering March–December 2017 across three regional offices.
+ 
+---
+ 
+## Key Findings
+ 
+| Finding | Detail |
+|---|---|
+| 🔴 **$4.59M pipeline at risk** | 95% of active pipeline is stale (>90 days open) or stuck in prospecting |
+| ⏳ **Closing problem, not a lead problem** | Only 11% of lost deals were instant rejections — 45% dragged on 30+ days before going cold |
+| 🏢 **Small firms, big revenue** | Lean companies (below-average headcount, above-average revenue) are being systematically undervalued |
+| ⚡ **Top agent defies the tradeoff** | Darcel Schlecht generated $1.15M — more than double the next agent — while closing 2 days *faster* than average |
+ 
 ---
 
-## Project Overview
-
-This is an end-to-end analytics project built on a raw B2B CRM dataset containing 8,800 sales opportunities across 4 tables, covering a B2B technology company's sales activity from 2017 (March to December) across three regional offices. Original dataset included late 2016 data which was excluded 
-to maintain full-year consistency in the analysis. 
-The goal was to go beyond surface-level reporting and answer the questions a sales director actually loses sleep over:
-
-- Are we hitting revenue targets and who is driving it?
-- Where is our active pipeline silently dying?
-- Which products and markets are worth our sales effort?
-
-The project covers the complete pipeline:
-**Raw Data → SQL Cleaning → Data Model → Power BI Dashboard**
+## Project Architecture
+ 
+```
+Raw CRM Data (CSV)
+    ↓
+MySQL — Staging tables, cleaning, 8 analytical queries
+    ↓
+Power BI — Star schema data model, Power Query transformations
+    ↓
+4-page Dashboard — Executive, Pipeline Risk, Product, Account views
+```
 
 ---
 
@@ -31,138 +49,100 @@ The sales organization had no clear visibility into pipeline health. Deals were 
 
 ## Part 1: SQL Data Cleaning & Analysis (MySQL)
 
-### Why Staging Tables First
+### Approach
+ 
+Before any cleaning, I created staging copies of every table. All transformations happened on staging only — the original data was never touched. This matters in a real environment where raw data needs to be auditable.
 
-Before touching the raw data I created a copy of every table as a staging table. This meant if I accidentally deleted or corrupted something during cleaning, the original data was always safe. Every transformation happened on the staging tables only.
-
-### What I Cleaned
-
-- **Date standardization:** The engage_date and close_date columns had mixed formats across rows. I detected every format variation and standardized everything to a clean DATE datatype using STR_TO_DATE() with multiple format patterns.
-
-- **Close value standardization:** Applied a defensive UPDATE using a LEFT JOIN to the Products table to enforce consistent close_value logic across all deal stages:
-  - Won deals: fallback to standard product sales_price if close_value was missing or zero (validation confirmed no such cases existed acts as safety net for future loads)
-  - Lost deals: explicitly set to 0 to ensure clean revenue aggregations
-  - Open deals: left as NULL, no revenue assumed for unclosed deals
-
-- **NULL account investigation:** 1,425 opportunities (16.2% of the dataset) had no linked account. Instead of deleting them I investigated why. The finding: every single NULL account record was in either Prospecting or Engaging stage, never in Won or Lost. This is normal CRM behavior, early stage leads that haven't been formally linked to an account yet. I flagged these with a has_account column (0/1) and kept them in the dataset.
-
-- **Sector name fix:** Found a typo "technolgy" standardized to "technology" across all affected rows.
-
-### A Key CRM Discovery
-
-Every lost deal in the dataset had both an engage_date and a close_date meaning our sales team made contact before the deal was marked lost. This revealed something important: leads that were contacted but never responded were NOT being marked as lost. They were sitting in Prospecting indefinitely, clogging the pipeline with dead weight that looks like active opportunity but isn't.
-
+### What Was Cleaned
+ 
+**Date standardization** — `engage_date` and `close_date` had mixed formats across rows. Detected every format variation and standardized to a clean `DATE` datatype using `STR_TO_DATE()` with multiple format patterns.
+ 
+**Close value logic** — Applied a defensive `UPDATE` using `LEFT JOIN` to the Products table to enforce consistent `close_value` across all deal stages: won deals fall back to `sales_price` if missing; lost deals explicitly set to 0; open deals left as NULL (no revenue assumed).
+ 
+**NULL account investigation** — 1,425 records (16.2% of the dataset) had no linked account. Rather than deleting them, I investigated why. Every single NULL account record was in either Prospecting or Engaging stage — never Won or Lost. This is normal CRM behavior: early-stage leads that haven't been formally linked to an account yet. Flagged with a `has_account` column and kept in the dataset.
+ 
+**Sector typo** — Found and corrected "technolgy" → "technology" across all affected rows.
+ 
+### A Structural Discovery in the Data
+ 
+Every lost deal had both an `engage_date` and a `close_date` — meaning the sales team made contact before the deal was marked lost. This exposed something important: leads that were contacted but never responded were **not** being marked as lost. They were sitting in Prospecting indefinitely, inflating the pipeline with dead weight that reads as active opportunity.
+ 
 ---
+
 
 ## SQL Business Analysis (8 Questions)
 
-### The Most Important Finding — Q5
+**Q1 — Quarter-over-Quarter Revenue by Product**
+Used `LAG()` window function to compare each product's revenue against the prior quarter. Finding: Nearly every product saw a sharp revenue spike in Q2 (GTK 500 up 621%, GTX Pro up 186%), followed by contraction through Q3 and Q4.
+ 
+**Q2 — Agent-Level Efficiency**
+Finding: High revenue does not require a longer sales cycle. Darcel Schlecht generated $1.15M (more than double the next agent) while closing in 49.4 days — 2 days faster than the company average. This is not a volume story; it is an efficiency story.
+ 
+**Q3 — High-Value Accounts Hidden in Small Companies**
+ 
 ```sql
--- How long does it take for an unsuccessful deal to drop off after initial engagement?
-
-with categorized_loss as(
-	select opportunity_id,
-        case
-		when datediff(close_date,engage_date)<=2 then 'Instant Rejection (0-2 Days)'
-                when datediff(close_date,engage_date) between 3 and 30 then 'Short Engagement (3-30 Days)'
-        	else 'Prolonged Disengagement (30+ Days)'
-	end as drop_off_category
-        from sales_pipeline_staging
-        where deal_stage = 'lost')
-select drop_off_category, 
-count(opportunity_id) as Total_lost_deals,
-round((count(opportunity_id)/sum(count(opportunity_id)) over())*100,2) as Lost_Percent
-from categorized_loss 
-group by drop_off_category;
+WITH benchmarks AS (
+    SELECT avg(employees) AS avg_employees, 
+           avg(revenue) AS avg_revenue
+    FROM accounts_staging
+)
+SELECT sp.account, 
+       a.revenue AS revenue_in_millions,
+       a.employees, 
+       SUM(sp.close_value) AS total_sales,
+       ROUND(SUM(sp.close_value) / a.employees, 2) AS sales_per_employee
+FROM sales_pipeline_staging sp
+JOIN accounts_staging a ON sp.account = a.account
+CROSS JOIN benchmarks
+WHERE a.employees < benchmarks.avg_employees
+  AND a.revenue > benchmarks.avg_revenue
+  AND sp.deal_stage = 'won'
+GROUP BY sp.account, a.employees, a.revenue 
+ORDER BY SUM(sp.close_value) DESC;
 ```
-
-**Finding:** Only 11% of lost deals were instant rejections meaning our leads are well qualified. But 45% of lost deals dragged on for 30+ days before going cold. The sales team is spending over a month on deals that will never close.
-
-**This is not a lead generation problem. It is a closing problem.**
-
----
-
-### Q1 — Quarter over Quarter Revenue by Product
-
-Used LAG() window function to compare each product's revenue against the previous quarter - identifying which products are growing and which are declining.
-
-**Finding:** Nearly every product saw a violent revenue spike in Q2 (e.g., GTK 500 surged 621%, GTX Pro up 186%), followed by sharp contractions or stagnation in Q3 and Q4.
-
----
-
-### Q2 — Agent-Level Efficiency
-**Finding:** High revenue does not inherently require longer sales cycles. The top-performing sales agent (Darcel Schlecht) is a massive outlier generating $1.15M (more than double the next closest agent) while closing deals in just 49.4 days, which is a full 2 days faster than the company average.
-
----
-
-### Q3 — High Value Accounts Hidden in Small Companies
+ 
+Finding: Lean companies with fewer employees but higher company revenue generated some of the highest sales figures in the dataset. Faster internal decisions, real purchasing power — these accounts should be prioritized for upselling and retention.
+ 
+**Q4 — Account Efficiency Analysis**
+Finding: Total revenue does not equal sales efficiency. Kan-code drives the most total volume but has only a 61.5% win rate. Rangreen and Goodsilron have win rates of 75% and 73.8% respectively — lower volume, far more efficient.
+ 
+**Q5 — How Long Does It Take for a Lost Deal to Drop Off?**
+ 
 ```sql
-with benchmarks as(
-	select avg(employees) as avg_employees, 
-	avg(revenue) as avg_revenue
-	from accounts_staging)
-select sp.account, 
-a.revenue as revenue_in_millions,
-a.employees, 
-sum(sp.close_value) as total_sales,
-round(sum(sp.close_value)/(a.employees),2) as sales_per_employee
-from sales_pipeline_staging sp
-join accounts_staging a
-	on sp.account = a.account
-cross join benchmarks
-where a.employees< benchmarks.avg_employees
-      and a.revenue> benchmarks.avg_revenue
-      and sp.deal_stage ="won"
-group by sp.account,a.employees, a.revenue 
-order by sum(sp.close_value) desc;
+WITH categorized_loss AS (
+    SELECT opportunity_id,
+        CASE
+            WHEN DATEDIFF(close_date, engage_date) <= 2 THEN 'Instant Rejection (0-2 Days)'
+            WHEN DATEDIFF(close_date, engage_date) BETWEEN 3 AND 30 THEN 'Short Engagement (3-30 Days)'
+            ELSE 'Prolonged Disengagement (30+ Days)'
+        END AS drop_off_category
+    FROM sales_pipeline_staging
+    WHERE deal_stage = 'lost'
+)
+SELECT drop_off_category, 
+       COUNT(opportunity_id) AS total_lost_deals,
+       ROUND((COUNT(opportunity_id) / SUM(COUNT(opportunity_id)) OVER()) * 100, 2) AS lost_percent
+FROM categorized_loss 
+GROUP BY drop_off_category;
 ```
-
-**Finding:** Companies with fewer employees than average but higher company revenue than average generated some of the highest sales figures. Lean organizations have faster decision-making and stronger purchasing power, these accounts should be prioritized for upselling and retention.
-
+ 
+Finding: Only 11% of lost deals were instant rejections — the leads are well-qualified. But 45% dragged on 30+ days before going cold. **This is not a lead generation problem. It is a closing problem.**
+ 
+**Q6 — Regional Revenue Efficiency**
+The East region yields $1,349.02 in won revenue for every opportunity in the pipeline — the highest of any region. The metric used is `won_revenue_per_opportunity`, not just total revenue, to measure true conversion efficiency.
+ 
+**Q7 — Deal Duration vs. Revenue by Product**
+GTX Pro is the highest-revenue product ($3.5M) and also the fastest to close. GTK 500 takes the longest (64 days) and generates the least revenue — the worst risk-adjusted return in the portfolio.
+ 
+**Q8 — Manager-Level Analysis**
+Win rates are remarkably consistent across all managers, ranging only from 62.08% to 64.43%. But total revenue varies by 2× (Melvin Marxen $2.25M vs. Dustin Brinkmann $1.09M). When everyone closes at the same rate but revenues differ this much, the gap is deal size and account quality — not individual skill.
+ 
 ---
-
-### Q4 — Account Efficiency Analysis
-
-Compared won deals, lost deals, total revenue and win rate per account to identify which accounts consume the most sales effort relative to their actual revenue contribution.
-
-**Finding:** Total revenue does not equal sales efficiency. While Kan-code drives the most total volume, their win rate is only 61.5%. Conversely, accounts like Rangreen and Goodsilron boast incredible win rates of 75% and 73.8% respectively.
-
----
-
-### Q6 — Regional Revenue Efficiency
-```sql
-select regional_office,
-round(sum(case when deal_stage = 'won' then close_value else 0 end)/count(opportunity_id),2) as won_revenue_per_opportunity
-from sales_pipeline_staging s
-join sales_teams_staging st
-on s.sales_agent = st.sales_agent 
-group by st.regional_office
-order by won_revenue_per_opportunity desc;
-```
-**Finding:** The East region is the most efficient at converting raw pipeline into dollars, yielding a true value of $1,349.02 for every opportunity.
-
----
-
-### Q7 — Deal Duration vs. Revenue by Product
-
-**Finding:** Expensive doesn't mean hard to sell. The priciest product (GTX Pro) is actually the fastest seller and the biggest moneymaker ($3.5M). On the other side, the GTK 500 takes the longest to sell (64 days) but brings in the least amount of money.
-
----
-
-### Q8 — Manager-Level Analysis
-
-**Finding:** Win rates are remarkably consistent across all managers and regions ranging only from 62.08% to 64.43%. No single manager has a meaningful edge in closing ability. However total revenue varies by 2x between the highest (Melvin Marxen $2.25M) and lowest (Dustin Brinkmann $1.09M) performers. When everyone wins at the same rate but revenues differ this much, the gap comes from deal size and account quality, not individual skill
-
----
-
+ 
 ## ⚙️ Part 2: Power BI Dashboard
 
 ### Data Model
-The dashboard is built on a star schema with the `sales_pipeline` table as the central fact table, connected to three dimension tables:
-- `products` — linked via product name
-- `accounts` — linked via account name  
-- `sales_teams` — linked via sales_agent name
-A star schema was chosen over a flat table to enable efficient filtering across dimensions without data redundancy.
+Built on a star schema with `sales_pipeline` as the central fact table, connected to three dimension tables: `products`, `accounts`, and `sales_teams`. Star schema chosen over a flat table to enable efficient cross-dimensional filtering without data redundancy.
 
 ### Power Query Transformations
 Two columns were created in Power Query before loading into the data model:
@@ -319,15 +299,6 @@ CRM-Sales-Analytics/
     ├── page3_product_performance.png
     └── page4_account_market.png
 ```
-
----
-
-## What I Learned
-
-- Always create staging tables before cleaning.
-- 16.2% of pipeline records had no linked account. Deleting them would have been wrong — investigating why revealed a real CRM behavior pattern worth preserving
-- 95% pipeline at risk sounds alarming but becomes fully defensible once the methodology is documented clearly
-- High deal size does not always mean high efficiency, GTK 500 proves that
 
 ---
 
