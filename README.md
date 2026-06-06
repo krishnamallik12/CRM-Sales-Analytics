@@ -1,5 +1,5 @@
 # CRM Sales & Pipeline Diagnostic
-> **95% of the active pipeline - $4.59M out of $4.82M - is stale or at risk of being lost. The sales team is spending 30+ days on 45% of deals that will never close. This project diagnoses exactly where the revenue is leaking and why.**
+> **95% of the active pipeline - $4.59M out of $4.82M is stale or at risk of being lost. The sales team is spending 30+ days on 45% of deals that will never close. This project diagnoses exactly where the revenue is leaking and why.**
 
 **Tech Stack:** MySQL · Power BI · Power Query · DAX
 
