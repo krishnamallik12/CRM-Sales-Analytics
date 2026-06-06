@@ -301,5 +301,11 @@ CRM-Sales-Analytics/
 ```
 
 ---
+## Business Recommendations
+
+- Set a 30-day follow-up rule — 45% of lost deals dragged on 30+ days. Flag any deal with no activity at the 30-day mark before more time is wasted
+- Create a dedicated segment for lean high-revenue accounts — they close faster and spend more. Treating them like large enterprises is leaving money on the table  
+- Review GTK 500's pitch or pricing — 64-day close time with the lowest revenue return means something is broken
+---
 
 *Built by Krishna Mallik | MySQL + Power BI | 2026*
