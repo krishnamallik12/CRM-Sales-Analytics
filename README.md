@@ -253,8 +253,7 @@ Avg revenue per account =
 
 Revenue target is calculated dynamically as average monthly revenue × 1.15. June was the strongest month at $1.34M i.e. 41% above the monthly average. The manager leaderboard reveals that Rocco Neubert generates the 2nd highest revenue but carries the lowest win rate - high volume, low efficiency.
 
-<img width="4150" height="2400" alt="crm_dashboard-1" src="https://github.com/user-attachments/assets/1d9bde27-7911-4290-9f21-4a7dee6dab93" />
-
+<img width="4150" height="2400" alt="page1_executive_sales" src="https://github.com/user-attachments/assets/2f15e14e-a61e-41bc-b512-69ffcf2cafb8" />
 ---
 
 #### Page 2 — Pipeline Risk & Leakage Diagnostic
@@ -262,7 +261,8 @@ Revenue target is calculated dynamically as average monthly revenue × 1.15. Jun
 
 95% of the active pipeline ($4.59M of $4.82M total) is either stale or stuck in prospecting. Only $230K worth of deals are currently healthy. The drill-down matrix allows sales directors to identify risk exposure at the manager, agent, and individual deal level.
 
-<img width="4150" height="2400" alt="crm_dashboard-2" src="https://github.com/user-attachments/assets/2b3f3e75-93cb-4262-86cb-f313f930b906" />
+<img width="4150" height="2400" alt="page2_pipeline_risk" src="https://github.com/user-attachments/assets/39347841-b641-4208-918c-f66fe5ad878e" />
+
 
 ---
 
@@ -272,7 +272,9 @@ Revenue target is calculated dynamically as average monthly revenue × 1.15. Jun
 GTX Pro leads total revenue across 9 of 10 sectors. GTK 500 has the highest average deal size at $26,765 but takes 64 days to close, the longest in the 
 portfolio and a significant efficiency bottleneck. MG Special has the highest deal volume relative to revenue generated, a product worth reviewing for continued investment.
 
-<img width="4150" height="2400" alt="crm_dashboard-3" src="https://github.com/user-attachments/assets/2a6c50cf-053f-4e8a-8374-caa3eddea92f" />
+<img width="4150" height="2400" alt="page3_product_performance" src="https://github.com/user-attachments/assets/af98d878-c757-4c50-8046-e1256a42140f" />
+
+
 
 ---
 
@@ -281,7 +283,8 @@ portfolio and a significant efficiency bottleneck. MG Special has the highest de
 
 Retail leads all sectors at $1.78M in won revenue. Kan-code is the highest contributing account at 3.59% of total revenue. Average revenue per account is $110.26K. The sector and series breakdown reveals GTX dominates across all markets at 73.45% of total series revenue.
 
-<img width="4150" height="2400" alt="crm_dashboard-4" src="https://github.com/user-attachments/assets/90acd821-f39a-4e9b-bff1-bcebb8d46d35" />
+<img width="4150" height="2400" alt="page4_account_market" src="https://github.com/user-attachments/assets/5e350430-04c5-40f2-9d03-f0d085b5c24b" />
+
 
 
 ---
