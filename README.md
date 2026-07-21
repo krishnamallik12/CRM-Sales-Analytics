@@ -21,9 +21,9 @@ This project was built to answer the questions a sales director actually loses s
 | Finding | Detail |
 |---|---|
 | 🔴 **$4.59M pipeline at risk** | 95% of active pipeline is stale (>90 days open) or stuck in prospecting |
-| ⏳ **Closing problem, not a lead problem** | Only 11% of lost deals were instant rejections — 45% dragged on 30+ days before going cold |
+| ⏳ **Closing problem, not a lead problem** | Only 11% of lost deals were instant rejections - 45% dragged on 30+ days before going cold |
 | 🏢 **Small firms, big revenue** | Lean companies (below-average headcount, above-average revenue) are being systematically undervalued |
-| ⚡ **Top agent defies the tradeoff** | Darcel Schlecht generated $1.15M — more than double the next agent — while closing 2 days *faster* than average |
+| ⚡ **Top agent defies the tradeoff** | Darcel Schlecht generated $1.15M - more than double the next agent - while closing 2 days *faster* than average |
  
 ---
 
@@ -32,11 +32,11 @@ This project was built to answer the questions a sales director actually loses s
 ```
 Raw CRM Data (CSV)
     ↓
-MySQL — Staging tables, cleaning, 8 analytical queries
+MySQL - Staging tables, cleaning, 8 analytical queries
     ↓
-Power BI — Star schema data model, Power Query transformations
+Power BI - Star schema data model, Power Query transformations
     ↓
-4-page Dashboard — Executive, Pipeline Risk, Product, Account views
+4-page Dashboard - Executive, Pipeline Risk, Product, Account views
 ```
 
 ---
@@ -46,34 +46,34 @@ Power BI — Star schema data model, Power Query transformations
 
 ### Approach
  
-Before any cleaning, I created staging copies of every table. All transformations happened on staging only — the original data was never touched. This matters in a real environment where raw data needs to be auditable.
+Before any cleaning, I created staging copies of every table. All transformations happened on staging only - the original data was never touched. This matters in a real environment where raw data needs to be auditable.
 
 ### What Was Cleaned
  
-**Date standardization** — `engage_date` and `close_date` had mixed formats across rows. Detected every format variation and standardized to a clean `DATE` datatype using `STR_TO_DATE()` with multiple format patterns.
+**Date standardization** - `engage_date` and `close_date` had mixed formats across rows. Detected every format variation and standardized to a clean `DATE` datatype using `STR_TO_DATE()` with multiple format patterns.
  
-**Close value logic** — Applied a defensive `UPDATE` using `LEFT JOIN` to the Products table to enforce consistent `close_value` across all deal stages: won deals fall back to `sales_price` if missing; lost deals explicitly set to 0; open deals left as NULL (no revenue assumed).
+**Close value logic** - Applied a defensive `UPDATE` using `LEFT JOIN` to the Products table to enforce consistent `close_value` across all deal stages: won deals fall back to `sales_price` if missing; lost deals explicitly set to 0; open deals left as NULL (no revenue assumed).
  
-**NULL account investigation** — 1,425 records (16.2% of the dataset) had no linked account. Rather than deleting them, I investigated why. Every single NULL account record was in either Prospecting or Engaging stage — never Won or Lost. This is normal CRM behavior: early-stage leads that haven't been formally linked to an account yet. Flagged with a `has_account` column and kept in the dataset.
+**NULL account investigation** - 1,425 records (16.2% of the dataset) had no linked account. Rather than deleting them, I investigated why. Every single NULL account record was in either Prospecting or Engaging stage - never Won or Lost. This is normal CRM behavior: early-stage leads that haven't been formally linked to an account yet. Flagged with a `has_account` column and kept in the dataset.
  
-**Sector typo** — Found and corrected "technolgy" → "technology" across all affected rows.
+**Sector typo** - Found and corrected "technolgy" → "technology" across all affected rows.
  
 ### A Structural Discovery in the Data
  
-Every lost deal had both an `engage_date` and a `close_date` — meaning the sales team made contact before the deal was marked lost. This exposed something important: leads that were contacted but never responded were **not** being marked as lost. They were sitting in Prospecting indefinitely, inflating the pipeline with dead weight that reads as active opportunity.
+Every lost deal had both an `engage_date` and a `close_date` - meaning the sales team made contact before the deal was marked lost. This exposed something important: leads that were contacted but never responded were **not** being marked as lost. They were sitting in Prospecting indefinitely, inflating the pipeline with dead weight that reads as active opportunity.
  
 ---
 
 
 ## SQL Business Analysis (8 Questions)
 
-**Q1 — Quarter-over-Quarter Revenue by Product**
+**Q1 - Quarter-over-Quarter Revenue by Product**
 Used `LAG()` window function to compare each product's revenue against the prior quarter. Finding: Nearly every product saw a sharp revenue spike in Q2 (GTK 500 up 621%, GTX Pro up 186%), followed by contraction through Q3 and Q4.
  
-**Q2 — Agent-Level Efficiency**
-Finding: High revenue does not require a longer sales cycle. Darcel Schlecht generated $1.15M (more than double the next agent) while closing in 49.4 days — 2 days faster than the company average. This is not a volume story; it is an efficiency story.
+**Q2 - Agent-Level Efficiency**
+Finding: High revenue does not require a longer sales cycle. Darcel Schlecht generated $1.15M (more than double the next agent) while closing in 49.4 days - 2 days faster than the company average. This is not a volume story; it is an efficiency story.
  
-**Q3 — High-Value Accounts Hidden in Small Companies**
+**Q3 - High-Value Accounts Hidden in Small Companies**
  
 ```sql
 WITH benchmarks AS (
@@ -96,12 +96,12 @@ GROUP BY sp.account, a.employees, a.revenue
 ORDER BY SUM(sp.close_value) DESC;
 ```
  
-Finding: Lean companies with fewer employees but higher company revenue generated some of the highest sales figures in the dataset. Faster internal decisions, real purchasing power — these accounts should be prioritized for upselling and retention.
+Finding: Lean companies with fewer employees but higher company revenue generated some of the highest sales figures in the dataset. Faster internal decisions, real purchasing power - these accounts should be prioritized for upselling and retention.
  
-**Q4 — Account Efficiency Analysis**
-Finding: Total revenue does not equal sales efficiency. Kan-code drives the most total volume but has only a 61.5% win rate. Rangreen and Goodsilron have win rates of 75% and 73.8% respectively — lower volume, far more efficient.
+**Q4 - Account Efficiency Analysis**
+Finding: Total revenue does not equal sales efficiency. Kan-code drives the most total volume but has only a 61.5% win rate. Rangreen and Goodsilron have win rates of 75% and 73.8% respectively - lower volume, far more efficient.
  
-**Q5 — How Long Does It Take for a Lost Deal to Drop Off?**
+**Q5 - How Long Does It Take for a Lost Deal to Drop Off?**
  
 ```sql
 WITH categorized_loss AS (
@@ -121,16 +121,16 @@ FROM categorized_loss
 GROUP BY drop_off_category;
 ```
  
-Finding: Only 11% of lost deals were instant rejections — the leads are well-qualified. But 45% dragged on 30+ days before going cold. **This is not a lead generation problem. It is a closing problem.**
+Finding: Only 11% of lost deals were instant rejections - the leads are well-qualified. But 45% dragged on 30+ days before going cold. **This is not a lead generation problem. It is a closing problem.**
  
-**Q6 — Regional Revenue Efficiency**
-The East region yields $1,349.02 in won revenue for every opportunity in the pipeline — the highest of any region. The metric used is `won_revenue_per_opportunity`, not just total revenue, to measure true conversion efficiency.
+**Q6 - Regional Revenue Efficiency**
+The East region yields $1,349.02 in won revenue for every opportunity in the pipeline - the highest of any region. The metric used is `won_revenue_per_opportunity`, not just total revenue, to measure true conversion efficiency.
  
-**Q7 — Deal Duration vs. Revenue by Product**
-GTX Pro is the highest-revenue product ($3.5M) and also the fastest to close. GTK 500 takes the longest (64 days) and generates the least revenue — the worst risk-adjusted return in the portfolio.
+**Q7 - Deal Duration vs. Revenue by Product**
+GTX Pro is the highest-revenue product ($3.5M) and also the fastest to close. GTK 500 takes the longest (64 days) and generates the least revenue - the worst risk-adjusted return in the portfolio.
  
-**Q8 — Manager-Level Analysis**
-Win rates are remarkably consistent across all managers, ranging only from 62.08% to 64.43%. But total revenue varies by 2× (Melvin Marxen $2.25M vs. Dustin Brinkmann $1.09M). When everyone closes at the same rate but revenues differ this much, the gap is deal size and account quality — not individual skill.
+**Q8 - Manager-Level Analysis**
+Win rates are remarkably consistent across all managers, ranging only from 62.08% to 64.43%. But total revenue varies by 2× (Melvin Marxen $2.25M vs. Dustin Brinkmann $1.09M). When everyone closes at the same rate but revenues differ this much, the gap is deal size and account quality - not individual skill.
  
 ---
  
@@ -142,9 +142,9 @@ Built on a star schema with `sales_pipeline` as the central fact table, connecte
 ### Power Query Transformations
 Two columns were created in Power Query before loading into the data model:
 
-- **Stage Order** — assigns a sort number to each deal stage (prospecting=1, engaging=2, won=3, lost=4) so visuals sort chronologically not alphabetically. Created here rather than DAX to avoid circular dependency errors.
+- **Stage Order** - assigns a sort number to each deal stage (prospecting=1, engaging=2, won=3, lost=4) so visuals sort chronologically not alphabetically. Created here rather than DAX to avoid circular dependency errors.
 
-- **Close Month / Close Month Name** — extracts month number and abbreviated name from close_date for time-based filtering across all pages.
+- **Close Month / Close Month Name** - extracts month number and abbreviated name from close_date for time-based filtering across all pages.
 
 ---
 
@@ -243,7 +243,7 @@ Avg revenue per account =
 
 ### Dashboard Pages
 
-#### Page 1 — Executive Sales Performance
+#### Page 1 - Executive Sales Performance
 **Question:** Are we hitting targets and who is driving results?
 
 Revenue target is calculated dynamically as average monthly revenue × 1.15. June was the strongest month at $1.34M i.e. 41% above the monthly average. The manager leaderboard reveals that Rocco Neubert generates the 2nd highest revenue but carries the lowest win rate - high volume, low efficiency.
@@ -251,7 +251,7 @@ Revenue target is calculated dynamically as average monthly revenue × 1.15. Jun
 <img width="4150" height="2400" alt="page1_executive_sales" src="https://github.com/user-attachments/assets/2f15e14e-a61e-41bc-b512-69ffcf2cafb8" />
 ---
 
-#### Page 2 — Pipeline Risk & Leakage Diagnostic
+#### Page 2 - Pipeline Risk & Leakage Diagnostic
 **Question:** Where is active pipeline silently dying?
 
 95% of the active pipeline ($4.59M of $4.82M total) is either stale or stuck in prospecting. Only $230K worth of deals are currently healthy. The drill-down matrix allows sales directors to identify risk exposure at the manager, agent, and individual deal level.
@@ -261,7 +261,7 @@ Revenue target is calculated dynamically as average monthly revenue × 1.15. Jun
 
 ---
 
-#### Page 3 — Product Performance
+#### Page 3 - Product Performance
 **Question:** What are we selling and what's making money?
 
 GTX Pro leads total revenue across 9 of 10 sectors. GTK 500 has the highest average deal size at $26,765 but takes 64 days to close, the longest in the 
@@ -273,7 +273,7 @@ portfolio and a significant efficiency bottleneck. MG Special has the highest de
 
 ---
 
-#### Page 4 — Account & Market Analysis
+#### Page 4 - Account & Market Analysis
 **Question:** Who is buying and where is the opportunity?
 
 Retail leads all sectors at $1.78M in won revenue. Kan-code is the highest contributing account at 3.59% of total revenue. Average revenue per account is $110.26K. The sector and series breakdown reveals GTX dominates across all markets at 73.45% of total series revenue.
@@ -301,9 +301,9 @@ CRM-Sales-Analytics/
 ---
 ## Business Recommendations
 
-- Set a 30-day follow-up rule — 45% of lost deals dragged on 30+ days. Flag any deal with no activity at the 30-day mark before more time is wasted
-- Create a dedicated segment for lean high-revenue accounts — they close faster and spend more. Treating them like large enterprises is leaving money on the table  
-- Review GTK 500's pitch or pricing — 64-day close time with the lowest revenue return means something is broken
+- Set a 30-day follow-up rule - 45% of lost deals dragged on 30+ days. Flag any deal with no activity at the 30-day mark before more time is wasted
+- Create a dedicated segment for lean high-revenue accounts - they close faster and spend more. Treating them like large enterprises is leaving money on the table  
+- Review GTK 500's pitch or pricing - 64-day close time with the lowest revenue return means something is broken
 ---
 
 *Built by Krishna Mallik | MySQL + Power BI | 2026*
