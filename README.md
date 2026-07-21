@@ -41,11 +41,6 @@ Power BI — Star schema data model, Power Query transformations
 
 ---
 
-## The Business Problem
-
-The sales organization had no clear visibility into pipeline health. Deals were stalling, revenue was at risk, and nobody could pinpoint exactly where the sales process was breaking down. This project was built to diagnose those problems with data not gut feeling.
-
----
 
 ## Part 1: SQL Data Cleaning & Analysis (MySQL)
 
