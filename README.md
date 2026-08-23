@@ -23,7 +23,6 @@ This project was built to answer the questions a sales director actually loses s
 |---|---|
 | 🔴 **$4.59M pipeline at risk** | 95% of active pipeline is stale (>90 days open) or stuck in prospecting |
 | ⏳ **Closing problem, not a lead problem** | Only 11% of lost deals were instant rejections - 45% dragged on 30+ days before going cold |
-| 🏢 **Small firms, big revenue** | Lean companies (below-average headcount, above-average revenue) are being systematically undervalued |
 | ⚡ **Top agent defies the tradeoff** | Darcel Schlecht generated $1.15M - more than double the next agent - while closing 2 days *faster* than average |
  
 ---
