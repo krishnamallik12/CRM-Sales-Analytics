@@ -97,21 +97,28 @@ Finding: Kan-code drives the most total revenue ($341K) but converts at only 61.
 **Q5 - How Long Does It Take for a Lost Deal to Drop Off?**
  
 ```sql
-WITH categorized_loss AS (
-    SELECT opportunity_id,
-        CASE
-            WHEN DATEDIFF(close_date, engage_date) <= 2 THEN 'Instant Rejection (0-2 Days)'
-            WHEN DATEDIFF(close_date, engage_date) BETWEEN 3 AND 30 THEN 'Short Engagement (3-30 Days)'
-            ELSE 'Prolonged Disengagement (30+ Days)'
-        END AS drop_off_category
-    FROM sales_pipeline_staging
-    WHERE deal_stage = 'lost'
-)
-SELECT drop_off_category, 
-       COUNT(opportunity_id) AS total_lost_deals,
-       ROUND((COUNT(opportunity_id) / SUM(COUNT(opportunity_id)) OVER()) * 100, 2) AS lost_percent
-FROM categorized_loss 
-GROUP BY drop_off_category;
+with categorized_loss as(
+	select opportunity_id,
+    case
+		when datediff(close_date,engage_date)<=2 then 'Early Drop-off (0-2 Days)'
+        when datediff(close_date,engage_date) between 3 and 30 then 'Short Sales Cycle (3-30 Days)'
+        else 'Long Sales Cycle (31+ Days)'
+	end as drop_off_category
+    from sales_pipeline_staging
+    where deal_stage = 'lost'
+    and close_date is not null
+    and engage_date is not null)
+select drop_off_category, count(*) as Total_lost_deals,
+round((count(*)/sum(count(*)) over())*100,2) as Lost_Percent
+from categorized_loss 
+group by drop_off_category
+order by 
+case drop_off_category
+    when 'Early Drop-off (0-2 Days)' then 1
+    when 'Short Sales Cycle (3-30 Days)' then 2
+    when 'Long Sales Cycle (31+ Days)' then 3
+end;
+
 ```
  
 Finding: Only 11% of lost deals were instant rejections - the leads are well-qualified. But 45% dragged on 30+ days before going cold. **This is not a lead generation problem. It is a closing problem.**
