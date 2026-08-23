@@ -73,33 +73,26 @@ Used `LAG()` window function to compare each product's revenue against the prior
 **Q2 - Agent-Level Efficiency**
 Finding: High revenue does not require a longer sales cycle. Darcel Schlecht generated $1.15M (more than double the next agent) while closing in 49.4 days - 2 days faster than the company average. This is not a volume story; it is an efficiency story.
  
-**Q3 - High-Value Accounts Hidden in Small Companies**
+**Q3 - Sector Performance**
  
 ```sql
-WITH benchmarks AS (
-    SELECT avg(employees) AS avg_employees, 
-           avg(revenue) AS avg_revenue
-    FROM accounts_staging
-)
-SELECT sp.account, 
-       a.revenue AS revenue_in_millions,
-       a.employees, 
-       SUM(sp.close_value) AS total_sales,
-       ROUND(SUM(sp.close_value) / a.employees, 2) AS sales_per_employee
-FROM sales_pipeline_staging sp
-JOIN accounts_staging a ON sp.account = a.account
-CROSS JOIN benchmarks
-WHERE a.employees < benchmarks.avg_employees
-  AND a.revenue > benchmarks.avg_revenue
-  AND sp.deal_stage = 'won'
-GROUP BY sp.account, a.employees, a.revenue 
-ORDER BY SUM(sp.close_value) DESC;
+select 
+    a.sector,
+    sum(case when sp.deal_stage = 'won' then sp.close_value else 0 end) as closed_won_revenue,
+    count(case when sp.deal_stage = 'won' then 1 end) as won_deals,
+    round(count(case when sp.deal_stage = 'won' then 1 end)/nullif(count(case when sp.deal_stage in ('won','lost') then 1 end),0) * 100,2) as win_rate_percentage,
+    round(sum(case when sp.deal_stage = 'won' then sp.close_value else 0 end)/nullif(count(case when sp.deal_stage = 'won' then 1 end),0),2) as avg_won_deal_value
+from sales_pipeline_staging sp
+inner join accounts_staging a on sp.account = a.account
+where sp.account is not null
+group by a.sector
+order by closed_won_revenue desc;
 ```
  
-Finding: Lean companies with fewer employees but higher company revenue generated some of the highest sales figures in the dataset. Faster internal decisions, real purchasing power - these accounts should be prioritized for upselling and retention.
+Finding: Retail leads all sectors in raw revenue ($1.87M), but it isn't the strongest performer on any efficiency metric. Marketing converts best (64.85% win rate) and Entertainment closes the largest average deals ($2,650), despite ranking near the bottom on total revenue. Win rates are tightly clustered across sectors (61–65%), so revenue differences are driven mainly by deal volume, not conversion skill.
  
-**Q4 - Account Efficiency Analysis**
-Finding: Total revenue does not equal sales efficiency. Kan-code drives the most total volume but has only a 61.5% win rate. Rangreen and Goodsilron have win rates of 75% and 73.8% respectively - lower volume, far more efficient.
+**Q4 -Account Efficiency Analysis**
+Finding: Kan-code drives the most total revenue ($341K) but converts at only 61.50% which is one of the lower win rates among top accounts. Rangreen (75.00%) and Goodsilron (73.86%) convert far more efficiently despite generating less than half the revenue. Total volume and win-rate efficiency are two different stories. Hence, a large revenue number doesn't necessarily mean the account is easy to close.
  
 **Q5 - How Long Does It Take for a Lost Deal to Drop Off?**
  
